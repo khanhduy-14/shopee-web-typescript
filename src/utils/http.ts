@@ -1,8 +1,8 @@
-import { getAccessTokenFromLS, setProfileToLS } from 'src/utils/auth'
+import { getAccessTokenFromLS, setProfileToLS, clearLS, setAccessTokenToLS } from 'src/utils/auth'
 import axios, { AxiosError, HttpStatusCode, type AxiosInstance } from 'axios'
 import { toast } from 'react-toastify'
 import { AuthResponse } from 'src/types/auth.type'
-import { clearLS, setAccessTokenToLS } from './auth'
+
 import path from 'src/constants/path'
 class Http {
   instance: AxiosInstance

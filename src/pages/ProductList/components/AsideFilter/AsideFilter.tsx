@@ -4,13 +4,13 @@ import Button from 'src/components/Button'
 import InputNumber from 'src/components/InputNumber'
 import path from 'src/constants/path'
 import { Category } from 'src/types/category.type'
-import { QueryConfig } from '../ProductList'
 import { useForm, Controller } from 'react-hook-form'
 import { Schema, schema } from 'src/utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { NoUndefinedField } from 'src/types/utils.type'
 import RatingStars from '../RatingStars'
 import { omit } from 'lodash'
+import { QueryConfig } from 'src/hooks/useQueryConfig'
 
 interface Props {
   queryConfig: QueryConfig
@@ -18,6 +18,11 @@ interface Props {
 }
 
 type FormData = NoUndefinedField<Pick<Schema, 'price_max' | 'price_min'>>
+/**
+ * Rule validate
+ * Nếu có price_min và price_max thì price_max >= price_min
+ * Còn không thì có price_min thì không có price_max và ngược lại
+ */
 
 const priceSchema = schema.pick(['price_min', 'price_max'])
 
