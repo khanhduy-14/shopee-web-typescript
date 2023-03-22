@@ -1,12 +1,24 @@
-import useRouteElement from './useRouteElement'
+import useRouteElements from './useRouteElement'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { useEffect, useContext } from 'react'
+import { LocalStorageEventTarget } from './utils/auth'
+import { AppContext } from './contexts/app.context'
+
 function App() {
-  const routeElement = useRouteElement()
+  const routeElements = useRouteElements()
+  const { reset } = useContext(AppContext)
+
+  useEffect(() => {
+    LocalStorageEventTarget.addEventListener('clearLS', reset)
+    return () => {
+      LocalStorageEventTarget.removeEventListener('clearLS', reset)
+    }
+  }, [reset])
 
   return (
     <div>
-      {routeElement}
+      {routeElements}
       <ToastContainer />
     </div>
   )
