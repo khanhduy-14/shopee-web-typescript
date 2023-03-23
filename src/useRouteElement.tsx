@@ -4,7 +4,6 @@ import { Navigate, Outlet, useRoutes } from 'react-router-dom'
 import { AppContext } from './contexts/app.context'
 import MainLayout from './layouts/MainLayout'
 import RegisterLayout from './layouts/RegisterLayout'
-
 import CartLayout from './layouts/CartLayout'
 import UserLayout from './pages/User/layouts/UserLayout'
 
