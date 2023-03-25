@@ -1,126 +1,118 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
-
-import omit from 'lodash/omit'
-
-import { schema, Schema } from 'src/utils/rules'
-import Input from 'src/components/Input'
-import authApi from 'src/apis/auth.api'
-import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
-import { ErrorResponse } from 'src/types/utils.type'
-import { useContext } from 'react'
-import { AppContext } from 'src/contexts/app.context'
+import { omit } from 'lodash'
+import { useForm } from 'react-hook-form'
+import { toast } from 'react-toastify'
+import userApi from 'src/apis/user.api'
 import Button from 'src/components/Button'
+import Input from 'src/components/Input'
+import { ErrorResponse } from 'src/types/utils.type'
+import { userSchema, UserSchema } from 'src/utils/rules'
+import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 
-type FormData = Pick<Schema, 'email' | 'password' | 'confirm_password'>
-const registerSchema = schema.pick(['email', 'password', 'confirm_password'])
+type FormData = Pick<UserSchema, 'password' | 'new_password' | 'confirm_password'>
+const passwordSchema = userSchema.pick(['password', 'new_password', 'confirm_password'])
 
-export default function Register() {
-  const { setIsAuthenticated, setProfile } = useContext(AppContext)
-  const navigate = useNavigate()
+export default function ChangePassword() {
   const {
     register,
+    formState: { errors },
     handleSubmit,
     setError,
-    formState: { errors }
+    reset
   } = useForm<FormData>({
-    resolver: yupResolver(registerSchema)
+    defaultValues: {
+      password: '',
+      confirm_password: '',
+      new_password: ''
+    },
+    resolver: yupResolver(passwordSchema)
   })
-  const registerAccountMutation = useMutation({
-    mutationFn: (body: Omit<FormData, 'confirm_password'>) => authApi.registerAccount(body)
-  })
-  const onSubmit = handleSubmit((data) => {
-    const body = omit(data, ['confirm_password'])
-    registerAccountMutation.mutate(body, {
-      onSuccess: (data) => {
-        setIsAuthenticated(true)
-        setProfile(data.data.data.user)
-        navigate('/')
-      },
-      onError: (error) => {
-        if (isAxiosUnprocessableEntityError<ErrorResponse<Omit<FormData, 'confirm_password'>>>(error)) {
-          const formError = error.response?.data.data
-          if (formError) {
-            Object.keys(formError).forEach((key) => {
-              setError(key as keyof Omit<FormData, 'confirm_password'>, {
-                message: formError[key as keyof Omit<FormData, 'confirm_password'>],
-                type: 'Server'
-              })
+  const updateProfileMutation = useMutation(userApi.updateProfile)
+
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      const res = await updateProfileMutation.mutateAsync(omit(data, ['confirm_password']))
+      toast.success(res.data.message)
+      reset()
+    } catch (error) {
+      if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
+        const formError = error.response?.data.data
+        if (formError) {
+          Object.keys(formError).forEach((key) => {
+            setError(key as keyof FormData, {
+              message: formError[key as keyof FormData],
+              type: 'Server'
             })
-          }
-          // if (formError?.email) {
-          //   setError('email', {
-          //     message: formError.email,
-          //     type: 'Server'
-          //   })
-          // }
-          // if (formError?.password) {
-          //   setError('password', {
-          //     message: formError.password,
-          //     type: 'Server'
-          //   })
-          // }
+          })
         }
       }
-    })
+    }
   })
 
   return (
-    <div className='bg-orange'>
-      <div className='container'>
-        <div className='grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10'>
-          <div className='lg:col-span-2 lg:col-start-4'>
-            <form className='rounded bg-white p-10 shadow-sm' onSubmit={onSubmit} noValidate>
-              <div className='text-2xl'>Đăng ký</div>
+    <div className='rounded-sm bg-white px-2 pb-10 shadow md:px-7 md:pb-20'>
+      <div className='border-b border-b-gray-200 py-6'>
+        <h1 className='text-lg font-medium capitalize text-gray-900'>Đổi mật khẩu</h1>
+        <div className='mt-1 text-sm text-gray-700'>Quản lý thông tin hồ sơ để bảo mật tài khoản</div>
+      </div>
+      <form className='mt-8 mr-auto max-w-2xl' onSubmit={onSubmit}>
+        <div className='mt-6 flex-grow md:mt-0 md:pr-12'>
+          <div className='mt-2 flex flex-col flex-wrap sm:flex-row'>
+            <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>Mật khẩu cũ</div>
+            <div className='sm:w-[80%] sm:pl-5'>
               <Input
-                name='email'
+                classNameInput='w-full rounded-sm border border-gray-300 px-3 py-2 outline-none focus:border-gray-500 focus:shadow-sm'
+                className='relative '
                 register={register}
-                type='email'
-                className='mt-8'
-                errorMessage={errors.email?.message}
-                placeholder='Email'
-              />
-              <Input
                 name='password'
-                register={register}
                 type='password'
-                className='mt-2'
+                placeholder='Mật khẩu cũ'
                 errorMessage={errors.password?.message}
-                placeholder='Password'
-                autoComplete='on'
               />
-
+            </div>
+          </div>
+          <div className='mt-2 flex flex-col flex-wrap sm:flex-row'>
+            <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>Mật khẩu mới</div>
+            <div className='sm:w-[80%] sm:pl-5'>
               <Input
-                name='confirm_password'
+                classNameInput='w-full rounded-sm border border-gray-300 px-3 py-2 outline-none focus:border-gray-500 focus:shadow-sm'
+                className='relative '
                 register={register}
+                name='new_password'
                 type='password'
-                className='mt-2'
-                errorMessage={errors.confirm_password?.message}
-                placeholder='Confirm Password'
-                autoComplete='on'
+                placeholder='Mật khẩu mới'
+                errorMessage={errors.new_password?.message}
               />
-
-              <div className='mt-2'>
-                <Button
-                  className='flex w-full items-center justify-center bg-red-500 py-4 px-2 text-sm uppercase text-white hover:bg-red-600'
-                  isLoading={registerAccountMutation.isLoading}
-                  disabled={registerAccountMutation.isLoading}
-                >
-                  Đăng ký
-                </Button>
-              </div>
-              <div className='mt-8 flex items-center justify-center'>
-                <span className='text-gray-400'>Bạn đã có tài khoản?</span>
-                <Link className='ml-1 text-red-400' to='/login'>
-                  Đăng nhập
-                </Link>
-              </div>
-            </form>
+            </div>
+          </div>
+          <div className='mt-2 flex flex-col flex-wrap sm:flex-row'>
+            <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>Nhập lại mật khẩu</div>
+            <div className='sm:w-[80%] sm:pl-5'>
+              <Input
+                classNameInput='w-full rounded-sm border border-gray-300 px-3 py-2 outline-none focus:border-gray-500 focus:shadow-sm'
+                className='relative '
+                register={register}
+                name='confirm_password'
+                type='password'
+                placeholder='Nhập lại mật khẩu'
+                errorMessage={errors.confirm_password?.message}
+              />
+            </div>
+          </div>
+          <div className='mt-2 flex flex-col flex-wrap sm:flex-row'>
+            <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right' />
+            <div className='sm:w-[80%] sm:pl-5'>
+              <Button
+                className='flex h-9 items-center rounded-sm bg-orange px-5 text-center text-sm text-white hover:bg-orange/80'
+                type='submit'
+              >
+                Lưu
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
