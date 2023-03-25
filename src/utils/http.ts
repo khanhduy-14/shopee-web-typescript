@@ -1,4 +1,5 @@
-import axios, { AxiosError, type AxiosInstance } from 'axios'
+// eslint-disable-next-line import/named
+import axios, { AxiosError, AxiosRequestConfig, type AxiosInstance } from 'axios'
 import HttpStatusCode from 'src/constants/httpStatusCode.enum'
 import { toast } from 'react-toastify'
 import { AuthResponse, RefreshTokenReponse } from 'src/types/auth.type'
@@ -15,7 +16,7 @@ import { URL_LOGIN, URL_LOGOUT, URL_REFRESH_TOKEN, URL_REGISTER } from 'src/apis
 import { isAxiosExpiredTokenError, isAxiosUnauthorizedError } from './utils'
 import { ErrorResponse } from 'src/types/utils.type'
 
-class Http {
+export class Http {
   instance: AxiosInstance
   private accessToken: string
   private refreshToken: string
@@ -29,8 +30,8 @@ class Http {
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
-        'expire-access-token': 5, // 10 giây
-        'expire-refresh-token': 60 * 60 // 1 giờ
+        'expire-access-token': 60 * 60 * 24, // 1 ngày
+        'expire-refresh-token': 60 * 60 * 24 * 160 // 160 ngày
       }
     })
     this.instance.interceptors.request.use(
@@ -64,7 +65,6 @@ class Http {
         return response
       },
       (error: AxiosError) => {
-        // Chỉ toast lỗi không phải 422 và 401
         if (
           ![HttpStatusCode.UnprocessableEntity, HttpStatusCode.Unauthorized].includes(error.response?.status as number)
         ) {
@@ -74,44 +74,26 @@ class Http {
           toast.error(message)
         }
 
-        // Lỗi Unauthorized (401) có rất nhiều trường hợp
-        // - Token không đúng
-        // - Không truyền token
-        // - Token hết hạn*
-
-        // Nếu là lỗi 401
         if (isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(error)) {
-          const configError = error.response?.config || {}
+          const config = (error.response?.config as AxiosRequestConfig) || {}
           const { url } = config
-          // Trường hợp Token hết hạn và request đó không phải là của request refresh token
-          // thì chúng ta mới tiến hành gọi refresh token
-          console.log(config)
           if (isAxiosExpiredTokenError(error) && url !== URL_REFRESH_TOKEN) {
-            // Hạn chế gọi 2 lần handleRefreshToken
             this.refreshTokenRequest = this.refreshTokenRequest
               ? this.refreshTokenRequest
               : this.handleRefreshToken().finally(() => {
-                  // Giữ refreshTokenRequest trong 10s cho những request tiếp theo nếu có 401 thì dùng
                   setTimeout(() => {
                     this.refreshTokenRequest = null
                   }, 10000)
                 })
             return this.refreshTokenRequest.then((access_token) => {
-              // Nghĩa là chúng ta tiếp tục gọi lại request cũ vừa bị lỗi
               return this.instance({ ...config, headers: { ...config.headers, authorization: access_token } })
             })
           }
-
-          // Còn những trường hợp như token không đúng
-          // không truyền token,
-          // token hết hạn nhưng gọi refresh token bị fail
-          // thì tiến hành xóa local storage và toast message
 
           clearLS()
           this.accessToken = ''
           this.refreshToken = ''
           toast.error(error.response?.data.data?.message || error.response?.data.message)
-          // window.location.reload()
         }
         return Promise.reject(error)
       }

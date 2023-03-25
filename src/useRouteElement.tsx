@@ -116,8 +116,9 @@ export default function useRouteElements() {
         </MainLayout>
       )
     },
+
     {
-      path: '',
+      path: path.home,
       index: true,
       element: (
         <MainLayout>

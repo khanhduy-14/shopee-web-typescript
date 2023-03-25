@@ -1,5 +1,5 @@
 const config = {
-  baseUrl: 'https://api-ecom.duthanhduoc.com/',
+  baseUrl: import.meta.env.VITE_SHOPEE_CLONE_API_URL,
   maxSizeUploadAvatar: 1048576 // bytes
 }
 
