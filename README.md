@@ -8,23 +8,19 @@
   <p align="center">
     Clone shopee  <a href="https://shopee.vn/">shopee.vn</a> using Typescript
     <br>
-    <a href="https://shopee.kd14.me/">Visit Website</a>
+<!--     <a href="https://shopee.kd14.me/">Visit Website</a> -->
 
   </p>
 </p>
 
 ## Table of contents
 
-- [Website](#website)
 - [Quick start](#quick-start)
-- [Features](#bugs-and-feature-requests)
+- [Features](#features)
 - [Demo](#demo)
 - [Creators](#creators)
 - [Thanks](#thanks)
 
-## Website
-
-Website link: [https://shopee.kd14.me/](https://shopee.kd14.me/)
 
 ---
 
@@ -122,7 +118,7 @@ View more ...
 
 </details>
 
-and view more in [https://shopee.kd14.me/](https://shopee.kd14.me/)
+<!-- and view more in [https://shopee.kd14.me/](https://shopee.kd14.me/) -->
 
 ## Creators
 
